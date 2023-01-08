@@ -1,0 +1,50 @@
+CREATE TABLE Hospital(
+DoctorId VARCHAR2 (10) NOT NULL,
+DocName VARCHAR2 (20),
+Specialization VARCHAR2 (10),
+HOD VARCHAR2 (10),
+DeptNo VARCHAR2 (5),
+HireDate DATE,
+Sal NUMBER(10,3)
+);
+
+
+
+CREATE TABLE Hospitaldept(
+
+DeptNo VARCHAR2 (5) NOT NULL,
+DeptName VARCHAR2 (20),
+Locations VARCHAR2 (20)
+);
+
+
+
+ALTER TABLE Hospital
+ADD AdditionalQualification varchar2(20);
+DESC Hospital;
+
+
+ALTER TABLE Hospital MODIFY Specialization VARCHAR(35) ;
+DESC Hospital;
+
+
+ALTER TABLE Hospitaldept DROP COLUMN Locations;  
+DESC Hospitaldept;
+
+ALTER TABLE Hospital RENAME COLUMN Sal to Salary; 
+DESC Hospital;
+
+
+DROP TABLE Hospitaldept;
+DESC Hospitaldept;
+
+SELECT 'ANANTHA KRISHNAN G' AS NAME, '20' AS AGE  from DUAL ;
+
+
+SELECT SYSDATE from DUAL;
+
+
+SELECT 55-15+8*3/6 from DUAL;
+
+SELECT table_name
+FROM all_tables;
