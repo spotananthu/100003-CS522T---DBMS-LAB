@@ -1,0 +1,56 @@
+SET SERVEROUTPUT ON
+
+CREATE TABLE areas (radius number(10,2),area number(10,2));
+
+DECLARE
+area areas.area%type;
+radius areas.radius%type;
+
+BEGIN
+for radius in 5..15 loop
+	area :=radius*radius*3.14;
+	insert into areas values(radius,area);
+end loop;
+
+END;
+/
+
+SELECT * FROM areas;
+
+
+CREATE TABLE ACCOUNT(accno varchar2(10),balance number(10,2));
+insert into ACCOUNT values('A1',1200);
+insert into ACCOUNT values('A2',1100);
+insert into ACCOUNT values('A3',750);
+insert into ACCOUNT values('A4',400);
+insert into ACCOUNT values('A5',600);
+insert into ACCOUNT values('A6',1600);
+insert into ACCOUNT values('A7',700);
+insert into ACCOUNT values('A8',1300);
+
+SET SERVEROUTPUT ON
+
+DECLARE 
+acno ACCOUNT.accno%type;
+bal ACCOUNT.balance%type;
+minbal ACCOUNT.balance%type:=500;
+
+BEGIN
+acno :=&acno;
+select balance into bal from ACCOUNT where accno=acno;
+if(bal<minbal) then
+	bal:=bal-100;
+	update ACCOUNT
+	set balance=bal where accno=acno;
+end if;
+end;
+/
+
+
+Enter value for acno: 'A4'
+old   7: acno :=&acno;
+new   7: acno :='A4';
+
+PL/SQL procedure successfully completed.
+
+select * from ACCOUNT
