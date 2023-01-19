@@ -1,0 +1,32 @@
+set serveroutput on;
+CREATE OR REPLACE PROCEDURE incr_comm(id IN VARCHAR)
+IS
+BEGIN
+UPDATE EMPLOYEE
+SET COMM = (COMM+(COMM*0.05))
+WHERE EMPID = id;
+EXCEPTION
+WHEN no_data_found THEN
+dbms_output.put_line('Employee does not exist');
+end;
+/
+execute incr_comm('E0006');
+
+
+set serveroutput on;
+CREATE OR REPLACE FUNCTION get_manager(id in VARCHAR)
+RETURN VARCHAR2 IS
+name VARCHAR2(20);
+BEGIN
+SELECT EMPNAME INTO name
+FROM EMPLOYEE
+WHERE EMPID IN (SELECT MANAGER FROM EMPLOYEE WHERE EMPID = id);
+RETURN name;
+END;
+/
+
+
+BEGIN
+dbms_output.put_line('Manager of E0001 is: ' || get_manager('E0001'));
+END;
+/
