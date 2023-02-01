@@ -1,0 +1,222 @@
+Question 14.
+
+##DEFINITION
+
+CREATE OR REPLACE PACKAGE h_pack AS
+PROCEDURE hire_emp(
+EmpId employee.empid%type,
+EmpName employee.empname%type,
+Job employee.job%type,
+Manager employee.manager%type,
+DeptNo employee.deptno%type,
+HireDate employee.hiredate%type,
+Salary employee.salary%type,
+Comm employee.comm%type
+);
+FUNCTION incr_comm(id IN employee.empid%type)
+RETURN employee.empid%type;
+END h_pack;
+
+##PACKAGE BODY
+
+CREATE OR REPLACE PACKAGE BODY h_pack AS
+PROCEDURE hire_emp(
+EmpId employee.empid%type,
+EmpName employee.empname%type,
+Job employee.job%type,
+Manager employee.manager%type,
+DeptNo employee.deptno%type,
+HireDate employee.hiredate%type,
+Salary employee.salary%type,
+Comm employee.comm%type
+)
+IS
+BEGIN
+INSERT INTO Employee
+VALUES(EmpId, EmpName, Job, Manager, DeptNo, HireDate, Salary, Comm);
+END hire_emp;
+FUNCTION incr_comm(id IN employee.empid%type)
+RETURN employee.empid%type IS
+BEGIN
+UPDATE EMPLOYEE
+SET COMM = (COMM+(COMM*0.05))
+WHERE EMPID = id;
+RETURN NULL;
+EXCEPTION
+WHEN no_data_found THEN
+dbms_output.put_line('Customer does not exist!');
+END incr_comm;
+END h_pack;
+
+##DECLARATION
+
+DECLARE
+id employee.empid%type;
+EmpId employee.empid%type := 'E0007';
+EmpName employee.empname%type := 'Danny';
+Job employee.job%type := 'Marketing';
+Manager employee.manager%type := 'E0001';
+DeptNo employee.deptno%type := 'D001';
+HireDate employee.hiredate%type := '17-FEB-12';
+Salary employee.salary%type := 31000;
+Comm employee.comm%type := 800;
+BEGIN
+h_pack.hire_emp(EmpId, EmpName, Job, Manager, DeptNo, HireDate, Salary, Comm);
+id := h_pack.incr_comm(EmpId);
+END;
+
+				   *************************************
+
+Question 15:
+
+CREATE TABLE SUPPLIERS (
+SuppNo VARCHAR(5) PRIMARY KEY,
+SName VARCHAR(20),
+SAddress VARCHAR(50),
+SCity VARCHAR(10),
+SState VARCHAR(10),
+SPhone NUMBER(10),
+SBalance NUMBER(10,3)
+);
+
+CREATE TABLE PARTS (
+PartNo VARCHAR(5) PRIMARY KEY,
+PName VARCHAR(10),
+Qty NUMBER(3),
+Price NUMBER(10,3)
+);
+
+CREATE TABLE ORDERS (
+OrdNo VARCHAR(5) PRIMARY KEY,
+OrdDate DATE,
+OrdSuppNo VARCHAR(5),
+OrdPartNo VARCHAR(5),
+OrdQty NUMBER(3),
+CONSTRAINT fk_supplier
+FOREIGN KEY (OrdSuppNo)
+REFERENCES SUPPLIERS(SuppNo),
+CONSTRAINT fk_parts
+FOREIGN KEY (OrdPartNo)
+REFERENCES PARTS(PartNo)
+);
+
+INSERT INTO SUPPLIERS VALUES('S001', 'Sam', 'ABC', 'COK', 'KERALA', 9457365849, 10000);
+INSERT INTO SUPPLIERS VALUES('S002', 'Dan', 'DEF', 'TCR', 'KERALA', 9457365849, 10000);
+INSERT INTO SUPPLIERS VALUES('S003', 'Jake', 'GHI', 'CAL', 'KERALA', 9457365849, 10000);
+INSERT INTO SUPPLIERS VALUES('S004', 'Harry', 'JKL', 'MAL', 'KERALA', 9457365849, 10000);
+INSERT INTO SUPPLIERS VALUES('S005', 'Kia', 'MNO', 'WAY', 'KERALA', 9457365849, 10000);
+INSERT INTO SUPPLIERS VALUES('S006', 'Tim', 'PQW', 'TVM', 'KERALA', 9457365849, 10000);
+
+INSERT INTO PARTS VALUES('P001', 'Part1', 500, 10000);
+INSERT INTO PARTS VALUES('P002', 'Part2', 400, 9900);
+INSERT INTO PARTS VALUES('P003', 'Part3', 600, 1090);
+INSERT INTO PARTS VALUES('P004', 'Part4', 50, 7000);
+
+CREATE OR REPLACE TRIGGER under_hund
+BEFORE INSERT
+ON ORDERS
+FOR EACH ROW
+WHEN (NEW.OrdSuppNo LIKE 'S002' AND NEW.OrdQty > 100)
+DECLARE
+above_hund EXCEPTION;
+BEGIN
+RAISE above_hund;
+EXCEPTION
+WHEN above_hund THEN
+raise_application_error(-20002, 'S002 cannot order more than 100 of any part...!');
+END;
+
+INSERT INTO ORDERS VALUES('O001', '20-OCT-21', 'S002', 'P001', 101); // error case
+INSERT INTO ORDERS VALUES('O001', '20-OCT-21', 'S001', 'P001', 101); // for any other supplier
+
+CREATE OR REPLACE TRIGGER supplier_city_check
+BEFORE INSERT
+ON SUPPLIERS
+FOR EACH ROW
+WHEN (NEW.SuppNo LIKE 'S%')
+DECLARE
+c NUMBER(3);
+same_city EXCEPTION;
+BEGIN
+SELECT COUNT(*) INTO c
+FROM SUPPLIERS
+WHERE SCity LIKE :NEW.SCity;
+IF(c > 0) THEN
+RAISE same_city;
+END IF;
+EXCEPTION
+WHEN same_city THEN
+raise_application_error(-20002, 'Cannot
+have more than one suppliers from the same city!');
+END;
+
+INSERT INTO SUPPLIERS VALUES('S007', 'Anwar', 'GTR', 'TVM', 'KERALA', 8457365249, 10500);//error case
+INSERT INTO SUPPLIERS VALUES('S007', 'Anwar', 'GTR', 'IDK', 'KERALA', 8457365249, 10500);//non-duplicate state
+
+
+CREATE OR REPLACE TRIGGER supplier_balance_check
+BEFORE INSERT
+ON ORDERS
+FOR EACH ROW
+WHEN (NEW.OrdNo LIKE 'O%')
+DECLARE
+part_price parts.price%type;
+balance suppliers.sbalance%type;
+order_value NUMBER(10,3);
+no_balance EXCEPTION;
+BEGIN
+SELECT Price INTO part_price
+FROM Parts
+WHERE PartNo LIKE :NEW.OrdPartNo;
+SELECT SBalance INTO balance
+FROM Suppliers
+WHERE SuppNo LIKE :NEW.OrdSuppNo;
+order_value := part_price * :NEW.OrdQty;
+IF(order_value > balance) THEN
+RAISE no_balance;
+END IF;
+EXCEPTION
+WHEN no_balance THEN
+raise_application_error(-20003, 'Supplier does not have enough balance!');
+END;
+
+INSERT INTO ORDERS VALUES('O003', '20-OCT-21', 'S001', 'P001', 15);//error case
+INSERT INTO ORDERS VALUES('O003', '20-OCT-21', 'S001', 'P001', 1);//working case
+
+
+***************************************
+
+DECLARE
+ CURSOR SAL_CUR
+IS
+ SELECT EMPID,SALARY
+ FROM EMPLOYEE
+ WHERE SALARY < 10000
+ OR (SALARY >= 10000 AND SALARY < 30000)
+ OR (SALARY >= 30000 AND SALARY < 60000);
+ EID EMPLOYEE.EMPID%TYPE;
+ SAL EMPLOYEE.SALARY%TYPE;
+BEGIN
+ OPEN SAL_CUR;
+ LOOP
+ FETCH SAL_CUR INTO EID,SAL;
+ EXIT WHEN SAL_CUR%NOTFOUND;
+ IF SAL < 10000
+ THEN
+ UPDATE EMPLOYEE
+ SET SALARY = 15000
+ WHERE EMPID = EID;
+ ELSIF SAL >= 10000 AND SAL < 30000
+ THEN
+ UPDATE EMPLOYEE
+ SET SALARY = 35000
+ WHERE EMPID = EID;
+ ELSIF SAL >= 30000 AND SAL < 60000
+ THEN
+ UPDATE EMPLOYEE
+ SET SALARY = 65000
+ WHERE EMPID = EID;
+ END IF;
+ END LOOP;
+ DBMS_OUTPUT.PUT_LINE(SAL_CUR%ROWCOUNT || ' RECORDS UPDATED.');
+END;
