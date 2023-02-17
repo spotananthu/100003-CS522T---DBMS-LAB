@@ -1,0 +1,39 @@
+use ab
+db.employees.insertMany([
+{ emp: 'Anantha Krishnan G', sal: 20000, address: { street: 'asb12', city: 'lll', country: 'US' }, dept: 'A' },
+{ emp: 'Tom', sal: 25000, address: { street: 'ak112', city: 'lll', country: 'US' }, dept: 'B' },
+{ emp: 'Tim', sal: 80000, address: { street: 'asb12', city: 'kkk', country: 'UK' }, dept: 'A' },
+{ emp: 'Pam', sal: 65000, address: { street: 'al12', city: 'ooo', country: 'SA' }, dept: 'C' },
+{ emp: 'Mary', sal: 40000, address: { street: 'a4512', city: 'tttt', country: 'SA' }, dept: 'A' },
+{ emp: 'Lily', sal: 75000, address: { street: 'vak11', city: 'yyy', country: 'UK' }, dept: 'C' },
+{ emp: 'Sal', sal: 55000, address: { street: 'at11', city: 'yyl', country: 'UK' }, dept: 'B' }
+]);
+
+db.employees.insertOne({ emp: 'Liam',sal:21000, address: { street: 'alb12', city: 'klk', country: 'fin' }, dept: 'A' })
+db.employees.find({})
+db.employees.find(
+{ sal: {$gt: 50000 },
+  dept: {$eq: 'C'}
+}
+);
+
+
+db.employees.updateOne(
+{ dept: 'B' },
+{ $set: { email: 'a1@gmail.com' }
+}
+);
+
+db.employees.updateOne(
+{ dept: 'B' },
+{ $set: { email: 'aa1@gmail.com' }
+}
+);
+db.employees.find({}).pretty();
+db.employees.deleteMany(
+{ sal: { $lt: 30000 },
+  dept: { $ne: 'C' }
+}
+);
+
+db.employees.find({}).pretty();
